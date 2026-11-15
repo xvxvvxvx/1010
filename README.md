@@ -75,7 +75,41 @@ Gem-Shop cleanup (no rotation timer), crate-opening Skip button fixed in its own
 - Tests: `node tests/update295.test.js`.
 
 ## Tests
-`node tests/update245.test.js`, `node tests/update23.test.js`, `node tests/update25.test.js`, `node tests/update26.test.js`, `node tests/update27.test.js`, `node tests/update275.test.js`, `node tests/update295.test.js`, `node tests/update28.test.js`, `node tests/economy.test.js`, `node tests/security.test.js`
+`node tests/update30.test.js`, `node tests/update245.test.js`, `node tests/update23.test.js`, `node tests/update25.test.js`, `node tests/update26.test.js`, `node tests/update27.test.js`, `node tests/update275.test.js`, `node tests/update295.test.js`, `node tests/update28.test.js`, `node tests/economy.test.js`, `node tests/security.test.js`
 
 Much love,
 - Night n Claude <3
+
+## Update 3.0 (Rank Expansion 3, Achievements, lifetime tracking, pity, Rank-Up Gradients, Aviamasters bands)
+Install: extract `goldupdate300.zip` over the repository root and overwrite. Every changed file is a COMPLETE replacement (no patches). Nothing else needs to be edited. This README.md is the old README plus this section.
+
+**New files** - `js/cos30.js` (rank gradients, achievement definitions + 34 exclusive cosmetics, effects), `js/achievements.js` (tracking, signed save, claims, page, claim animation), `css/update30.css`, `tests/update30.test.js`, `img/elite.jpg`, `img/obsidian.jpg`, `img/netherite.jpg`, `img/bedrock.jpg` (white 256x256 placeholders: replace the files, keep the names; the mapping is `BIMG` in `js/ui.js`).
+**Replaced files** - `README.md`, `game.html`, `sw.js`, `js/loader.js`, `js/config.js`, `js/storage.js`, `js/economy.js`, `js/ui.js`, `js/mastery.js`, `js/progress.js`, `js/addon295.js`, `js/games/aviamasters.js`, `tests/update25.test.js`, `tests/update27.test.js`, `tests/update275.test.js`, `tests/update29.test.js`, `tests/update295.test.js`.
+
+### Rank Expansion 3
+- 12 new ranks after Division 1: Elite I-III, Obsidian I-III, Netherite I-III, Bedrock I-III (**Bedrock III is the maximum**; 47 ranks, 46 rank-ups). Requirements continue the page-2 curve (+5..+20% per step: Division 1 -> Elite I 1,100,000 / 2,600 rounds ... Bedrock II -> III 3,320,000 / 4,000); starting cash 5,500 .. 11,000 and Gems 36 .. 58, rising every rank. Rank-Up page 3 now ends at Division 1 and **page 4** holds the new ranks.
+- One shared definition (`RankFx` in `cos30.js`) drives rank text, promotion screen, Rank-Up Gradient cosmetics, inventory and equipped names: every gradient from page 3 (index 22+) is animated; Elite = black-to-gold + gold particles; Obsidian = black-to-purple, white outline, Nether-Portal pixel particles; Netherite = dark grey/black, animated golden outline, gold embers + ash; Bedrock = black-to-white, animated purple outline, white/violet sparks (CSS `.rkf-<family>` in `css/update30.css`, reduced-motion respected).
+
+### Achievements (sidebar, directly below Mastery)
+15 tracks x 5 levels (75 levels): Lifetime Cash Earned, Lifetime Rounds, Gems Earned (lifetime), Rank Conqueror, Endgame Ascent (Elite/Netherite/Bedrock), Gradient Crates Opened, Tag Crates Opened, Lifetime Profit, Highest Multiplier, Minigames Completed, Game Variety, Mastery Levels, Rare Discoveries, Legendary Discoveries, Daily Streak. Claims are **individual only** (no Claim All) with a tier-coloured trophy celebration; the claimed bit is saved before paying, a cosmetic is never added twice. Coin/Gem rewards are deliberately small (max $25,000 / 12 Gems per level); the prestige is 34 exclusive animated tags and gradients (rarity "Exclusive", unsellable), e.g. `[THE MILLIONAIRE]` (1,000,000 lifetime Coin), `[THE GOLD]` (2,000 rounds; silver slowly turns to Midas gold), `[THE NETHER]` (Obsidian I; pixel font, Obsidian family), crate-themed cosmetics at 150 crates. Own signed key `0-100_v3.0_ach` (claims + high-water marks, so selling a cosmetic never un-completes a level).
+
+### Lifetime tracking (main signed save, `Store.d.ls`, helper `Life` in `storage.js`)
+`lc` Coin income, `lp` round profit, `lg` Gems earned (counted in `Store.sync`, i.e. every real Gem gain, never spending), `lm` completed minigames (wagers >= `ROUND_MIN_BET`, not `noCount`), `hm` highest multiplier, `ds/dsb/dsl` daily streak, `cg/ct` crates opened, `rkh` highest rank. Incremented where the events happen (`Econ.settle`, `Econ.addCoins`, `Daily`, `Rank.rankUp`, `Crate.open`).
+
+### Quality of life
+- **Pity**: every spin counts; Epic / Legendary rolls no longer reset it; only the guaranteed spin (counter at 10 -> next spin guaranteed Epic+) consumes it; Tag and Gradient stay independent; own signed key unchanged.
+- **Rank-Up Gradients** replace Mastery "Rank-Up Ready Rewards" (`ir`): counter = highest rank, 10 levels (ranks 1, 5, 10, 15, 20, 25, 30, 35, 40, 46), **no Coin / Gems**, 47 gradients `rg_0..rg_46` ("<Rank> Gradient"). Ten levels cannot map one-to-one onto 47 ranks, so level n grants the milestone rank's gradient **and every lower rank gradient not yet owned**.
+- **Aviamasters**: 4-5x, 5-6x and 6-7x (and 2-4x) are now explicit landing bands (chances per landed flight 1.2% / 0.6% / 0.4%, 2% for 2-4x); soft cap lowered (1.2, slope .1) and rocket divisor 2.05 so the return is recalibrated. Measured over 8,000,000 flights: RTP **1.0086**, profit rate **36.13%**; displayed odds (incl. new rows) match the simulation and total 100%. Jackpots unchanged.
+
+### Migration / compatibility
+Old saves load unchanged: missing `ls` is created (signed saves seed lifetime profit/Coin from the existing per-game "made" stats and Gems from the current balance; unsigned legacy saves start at 0). Mastery data gets version `v:3`: the **old `ir` progress and claims are reset once** (they counted Rank-Up Ready rewards); Coin/Gems already paid and the legacy cosmetics `m_ir_3/6/10` stay and still resolve. Tag/Gradient Collection Level 10 still means "everything", so it now includes rank gradients and achievement cosmetics (Gradient Completionist therefore needs the top rank gradients). Service-worker cache is `gold-offline-v3.0.0` (also now pre-caches `cos295.js` / `addon295.js`, which were missing).
+
+### Tests run (Node, no browser)
+`node tests/update30.test.js`: 102 passed, 0 failed (ranks, gradients, achievements, tracking, migration, claims, pity, Aviamasters 1.5M-flight simulation, wiring, whole-loader-bundle parse). All older suites re-run: no new failures caused by this update. 23 failures exist on the untouched repository (identical before and after this update) and remain: `economy` (stale 2.0-era expectations: rank names, Gem rate, catalog counts, Plinko; plus "daily quests reset" which depends on the weekday it is run), `security` (spin speed), `update23` (4 crate-open tests), `update26` (animation clock), `update27` (case-pirate.jpg is a PNG; dev.js loader regex), `update28` (2 stale), `update29` (rarest-jackpot label), `update295` (EXPLOIT_AUDIT.md missing).
+Also run: the full game bundle loaded in jsdom with every page mounted (Home, Rank-Up with 4 pages, Achievements, Mastery, Inventory, Shop, Quests, Daily, Aviamasters, Cases), a rank-up walk Division 2 -> Bedrock III, claim + celebration overlay: no runtime errors.
+
+### Known limitations
+- **No real browser was available**: CSS animations, particles, outlines, the celebration overlay and layouts were NOT visually verified (jsdom does not render). The Netherite/Bedrock "gradient outline" is an animated drop-shadow colour cycle (CSS cannot stroke text with a true gradient while the fill is a clipped gradient), so it is an approximation of a gradient outline.
+- `[THE NETHER]` uses the Google font "Press Start 2P" (loaded in `game.html`, cached by the service worker after first online visit); offline on a first visit it falls back to monospace.
+- Achievement thresholds/rewards are a first balance pass (not play-tested); `Rare Discoveries` and `Legendary Discoveries` are capped at counts that exist in the catalog today (20 / 15).
+
