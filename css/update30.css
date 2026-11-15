@@ -1,0 +1,76 @@
+/* v3.0: animated rank gradients + the Elite / Obsidian / Netherite / Bedrock families (rank text, promotion screens, Rank-Up Gradient cosmetics, inventory, equipped names all share these rules),
+   achievement cosmetic effects (the per-cosmetic particle art is generated in js/cos30.js) and the Achievements page. Loaded after update29.css. Reduced motion is respected at the bottom. */
+/* ---------- shared bases ---------- */
+.axw{position:relative;display:inline-block;vertical-align:middle}
+.axw::before,.axw::after{content:"";position:absolute;left:-8px;right:-8px;top:-10px;bottom:-10px;pointer-events:none;opacity:0;background-repeat:repeat-x;background-position:0 70%;animation-iteration-count:infinite;animation-timing-function:ease-out;animation-delay:var(--dl,0s)}
+.axu::before{animation-name:cfxUp;animation-duration:2.4s}.axu::after{animation-name:cfxTw;animation-duration:1.8s;animation-delay:calc(var(--dl,0s) - .8s)}
+.axd::before{animation-name:axDn;animation-duration:2.8s}.axd::after{animation-name:axDn;animation-duration:3.6s;animation-delay:calc(var(--dl,0s) - 1.4s)}
+@keyframes axDn{0%{opacity:0;transform:translateY(-14px)}20%{opacity:1}100%{opacity:0;transform:translateY(16px)}}
+/* animated rank text (page 3+): same loop as animated cosmetics */
+.rk.rka{background-size:300% 100%;animation:cosx 4s linear infinite}
+/* "[THE GOLD]": silver slowly turns into full Midas gold and back */
+.cos.anp{background-size:500% 100%;animation:axProg 8s ease-in-out infinite alternate}@keyframes axProg{from{background-position:0 0}to{background-position:100% 0}}
+.axi{display:inline-block;width:1.2em;height:1.2em;margin-right:.3em;vertical-align:-.2em;background:center/contain no-repeat;animation:axBob 2.4s ease-in-out infinite}
+@keyframes axBob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-2px) rotate(6deg)}}
+/* Minecraft-style lettering ([THE NETHER]): pixel font + crisp edges (overrides the global Fredoka rule of update28.css) */
+.mcf .cos,.mcf{font-family:'Press Start 2P','Courier New',monospace!important}.mcf .cos{font-size:.62em;letter-spacing:0;text-rendering:optimizeSpeed;image-rendering:pixelated}
+/* ---------- rank / cosmetic families ---------- */
+.rkf-elite,.rkf-obsidian,.rkf-netherite,.rkf-bedrock{position:relative;display:inline-block}
+.rkf-elite::before,.rkf-elite::after,.rkf-obsidian::before,.rkf-obsidian::after,.rkf-netherite::before,.rkf-netherite::after,.rkf-bedrock::before,.rkf-bedrock::after{content:"";position:absolute;left:-7px;right:-7px;top:-9px;bottom:-9px;pointer-events:none;opacity:0;background-repeat:no-repeat}
+/* ELITE: black-to-gold, gold glow, rising gold particles */
+.rkf-elite{filter:drop-shadow(0 0 3px #d4a01799)}
+.rkf-elite::before{background-image:radial-gradient(circle,#ffd84d 0 1.5px,transparent 2.4px),radial-gradient(circle,#fff1a8 0 1.2px,transparent 2px),radial-gradient(circle,#ffd84d 0 1.7px,transparent 2.6px),radial-gradient(circle,#b8860b 0 1.4px,transparent 2.2px);background-size:7px 7px;background-position:8% 80%,34% 90%,62% 72%,90% 84%;animation:cfxUp 2.2s ease-out infinite}
+.rkf-elite::after{background-image:radial-gradient(circle,#fff1a8 0 1px,transparent 1.9px),radial-gradient(circle,#ffd84d 0 1.3px,transparent 2.2px),radial-gradient(circle,#fff 0 .9px,transparent 1.8px);background-size:6px 6px;background-position:20% 60%,52% 86%,80% 66%;animation:cfxTw 1.6s ease-out infinite .6s}
+/* OBSIDIAN: black-to-purple, white outline, Nether-Portal pixel particles drifting upward */
+.rkf-obsidian{-webkit-text-stroke:.7px #fff;filter:drop-shadow(0 0 4px #a855f799)}
+.rkf-obsidian::before{background-image:linear-gradient(#c084fc,#c084fc),linear-gradient(#a855f7,#a855f7),linear-gradient(#e9d5ff,#e9d5ff),linear-gradient(#7e22ce,#7e22ce),linear-gradient(#d8b4fe,#d8b4fe);background-size:3px 3px,4px 4px,2px 2px,3px 3px,3px 3px;background-position:6% 84%,26% 92%,48% 76%,70% 90%,92% 80%;animation:axPortal 2.6s ease-out infinite}
+.rkf-obsidian::after{background-image:linear-gradient(#a855f7,#a855f7),linear-gradient(#e9d5ff,#e9d5ff),linear-gradient(#c084fc,#c084fc),linear-gradient(#7e22ce,#7e22ce);background-size:3px 3px,2px 2px,4px 4px,3px 3px;background-position:16% 70%,40% 88%,64% 74%,86% 90%;animation:axPortal 3.2s ease-out infinite 1.1s}
+@keyframes axPortal{0%{opacity:0;transform:translate(0,8px)}20%{opacity:1}50%{transform:translate(-3px,-4px)}100%{opacity:0;transform:translate(3px,-15px)}}
+/* NETHERITE: dark grey/black, animated golden outline, gold embers + ash */
+.rkf-netherite{animation:rkNeth 3s ease-in-out infinite}
+@keyframes rkNeth{0%,100%{filter:drop-shadow(1px 0 #ffd84d) drop-shadow(-1px 0 #b8860b) drop-shadow(0 1px #fff1a8) drop-shadow(0 -1px #b8860b) drop-shadow(0 0 4px #d4a01766)}50%{filter:drop-shadow(1px 0 #b8860b) drop-shadow(-1px 0 #ffd84d) drop-shadow(0 1px #b8860b) drop-shadow(0 -1px #fff1a8) drop-shadow(0 0 7px #ffd84d99)}}
+.rkf-netherite::before{background-image:radial-gradient(circle,#ffd84d 0 1.5px,transparent 2.4px),radial-gradient(circle,#8a8a96 0 1.6px,transparent 2.5px),radial-gradient(circle,#fff1a8 0 1.1px,transparent 2px),radial-gradient(circle,#4a4a52 0 1.8px,transparent 2.7px),radial-gradient(circle,#f59e0b 0 1.3px,transparent 2.2px);background-size:7px 7px;background-position:6% 84%,28% 92%,50% 74%,74% 90%,94% 78%;animation:cfxUp 2.4s ease-out infinite}
+.rkf-netherite::after{background-image:radial-gradient(circle,#ffd84d 0 1px,transparent 1.9px),radial-gradient(circle,#b8860b 0 1.3px,transparent 2.2px),radial-gradient(circle,#8a8a96 0 1.2px,transparent 2.1px);background-size:6px 6px;background-position:18% 62%,46% 86%,78% 68%;animation:cfxTw 2s ease-out infinite .5s}
+/* BEDROCK: black-to-white, animated purple outline, white + violet sparks */
+.rkf-bedrock{animation:rkBed 3s ease-in-out infinite}
+@keyframes rkBed{0%,100%{filter:drop-shadow(1px 0 #a855f7) drop-shadow(-1px 0 #6d28d9) drop-shadow(0 1px #d8b4fe) drop-shadow(0 -1px #6d28d9) drop-shadow(0 0 4px #a855f788)}50%{filter:drop-shadow(1px 0 #6d28d9) drop-shadow(-1px 0 #c084fc) drop-shadow(0 1px #6d28d9) drop-shadow(0 -1px #e9d5ff) drop-shadow(0 0 8px #a855f7aa)}}
+.rkf-bedrock::before{background-image:radial-gradient(circle,#fff 0 1.4px,transparent 2.3px),radial-gradient(circle,#c084fc 0 1.5px,transparent 2.4px),radial-gradient(circle,#e9d5ff 0 1.1px,transparent 2px),radial-gradient(circle,#a855f7 0 1.7px,transparent 2.6px),radial-gradient(circle,#fff 0 1.2px,transparent 2.1px);background-size:7px 7px;background-position:6% 82%,28% 92%,50% 72%,74% 90%,94% 78%;animation:cfxUp 2s ease-out infinite}
+.rkf-bedrock::after{background-image:radial-gradient(circle,#fff 0 1px,transparent 1.9px),radial-gradient(circle,#a855f7 0 1.3px,transparent 2.2px),radial-gradient(circle,#e9d5ff 0 1.2px,transparent 2.1px);background-size:6px 6px;background-position:16% 60%,44% 86%,76% 64%;animation:cfxTw 1.5s ease-out infinite .4s}
+/* an achievement cosmetic that carries a family class keeps its own per-cosmetic particle art (generated in cos30.js) and takes the family outline / motion */
+/* ---------- exclusive rarity label ---------- */
+.rar[style*="#ff9de2"]{display:inline-block;padding:1px 10px;border:2px solid #ff9de2;border-radius:999px;color:#ffe3f6!important;letter-spacing:1.5px;background:linear-gradient(110deg,#2a0a24 0%,#5b1b4d 35%,#2a0a24 55%,#7a2a66 70%,#2a0a24 100%) 0 0/300% 100%;box-shadow:0 0 8px #ff9de288;animation:lmBlk 3.6s linear infinite}
+/* ---------- Achievements page ---------- */
+.ach-hero{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 12px}.ach-hero svg{flex:none}
+.ach-sum{font-size:13px;color:#e5e5e5}.ach-sum b{color:#ffd84d}
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px;margin-bottom:16px}
+.ach-c{position:relative;display:grid;gap:6px;text-align:left;padding:12px 14px;border:3px solid var(--line);border-radius:22px;color:#fff;font:inherit;cursor:pointer;background:linear-gradient(160deg,#17120a,#0a0a0a 60%);transition:background .25s,color .25s,transform .25s,box-shadow .25s}
+.ach-c:hover{transform:translateY(-2px);box-shadow:0 8px 22px #ffd84d33}.ach-c.on{background:linear-gradient(160deg,#fff7d6,#ffd84d);color:#1a1200}
+.ach-c .an{font-weight:700;font-size:14px;line-height:1.2}.ach-c .al{font:700 12px Fredoka,sans-serif;letter-spacing:.5px}.ach-c small{font-size:11px;opacity:.85}.ach-c .pb{margin:0}.ach-c.on .pb{background:#d6d6d6;border-color:#000}.ach-c.on .pb span{color:#000}
+.ach-c.rdy{border-color:#ffd84d;box-shadow:0 0 14px #ffd84d66}.ach-c .acn{position:absolute;right:10px;top:-10px;background:#ffd84d;color:#1a1200;font:700 10px Fredoka,sans-serif;letter-spacing:.5px;padding:2px 9px;border-radius:999px;animation:msPop 1.2s ease-in-out infinite}
+.ach-pips{display:flex;gap:4px;--tc:#ffd84d}.ach-pips i{width:14px;height:6px;border-radius:3px;background:#3a3a3a}.ach-pips i.d{background:var(--tc)}.ach-pips i.c{background:#ffd84d;box-shadow:0 0 6px #ffd84d}
+.ach-list{display:grid;gap:8px}
+.ach-r{--tc:#cd7f32;position:relative;display:grid;grid-template-columns:96px minmax(0,1.1fr) minmax(0,1.6fr) 118px;gap:12px;align-items:center;padding:10px 14px;border:2px solid #ffffff44;border-left:6px solid var(--tc);border-radius:18px;background:#080808;transition:border-color .25s,background .25s}
+.ach-r[data-t="2"]{--tc:#cbd5e1}.ach-r[data-t="3"]{--tc:#ffd84d}.ach-r[data-t="4"]{--tc:#7dd3fc}.ach-r[data-t="5"]{--tc:#f0abfc}
+.ach-r.cur{border-color:#fff;background:#141414}.ach-r.claimed{opacity:.62}.ach-r.ready{border-color:var(--tc);background:#16120a;box-shadow:0 0 18px color-mix(in srgb,var(--tc) 45%,transparent)}
+.ach-r .tier{font:700 12px Fredoka,sans-serif;color:var(--tc);letter-spacing:1px}.ach-r .tier b{display:block;font-size:18px;letter-spacing:0}
+.ach-r .obj{font-size:14px}.ach-r .obj small{display:block;color:#a3a3a3;font-size:11px}.ach-r .rw{display:grid;gap:3px;font-size:13px}.ach-r .rw .cs{min-height:28px;display:flex;align-items:center}
+.ach-r .rw small{color:#a3a3a3;font-size:11px;line-height:1.3}.ach-r .st{justify-self:end;font:700 11px Fredoka,sans-serif;letter-spacing:.5px;color:#a3a3a3;text-align:center}.ach-r .st.ok{color:#ffd84d}
+.ach-claim{padding:8px 14px;font-size:13px;background:linear-gradient(#fff7d6,#ffd84d)!important;color:#1a1200!important;border-color:#ffd84d!important;animation:msPop 1.1s ease-in-out infinite}
+@media(max-width:800px){.ach-r{grid-template-columns:70px minmax(0,1fr) 100px}.ach-r .rw{grid-column:2/4}}
+/* claim celebration (one per claim; tier colour in --tc, bigger for higher tiers) */
+.axo{--tc:#cd7f32;position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 45%,#1a1200ee,#000000f5 70%);animation:axoIn .35s both;overflow:hidden}
+.axo[data-t="2"]{--tc:#cbd5e1}.axo[data-t="3"]{--tc:#ffd84d}.axo[data-t="4"]{--tc:#7dd3fc}.axo[data-t="5"]{--tc:#f0abfc}@keyframes axoIn{from{opacity:0}}
+.axo-rays{position:absolute;left:50%;top:42%;width:220vmax;height:220vmax;margin:-110vmax 0 0 -110vmax;background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--tc) 40%,transparent) 0 5deg,transparent 5deg 14deg);-webkit-mask-image:radial-gradient(circle closest-side,#000 0,#000 8%,transparent 32%);mask-image:radial-gradient(circle closest-side,#000 0,#000 8%,transparent 32%);animation:axoSpin 40s linear infinite;pointer-events:none}
+@keyframes axoSpin{to{transform:rotate(360deg)}}
+.axo-box{position:relative;z-index:2;display:grid;gap:10px;justify-items:center;text-align:center;padding:20px;max-width:560px}
+.axo-tr{width:min(190px,40vw);filter:drop-shadow(0 0 24px var(--tc));animation:axoTr 1s cubic-bezier(.2,1.5,.4,1) both}.axo[data-t="5"] .axo-tr{width:min(240px,50vw)}
+@keyframes axoTr{0%{transform:scale(0) rotate(-140deg);opacity:0}100%{transform:none;opacity:1}}
+.axo-h{font:700 clamp(22px,4.6vw,44px)/1.05 Fredoka,sans-serif;letter-spacing:3px;color:var(--tc);text-shadow:0 0 22px var(--tc);animation:axoUp .7s .5s both}
+.axo-n{font:600 clamp(15px,2.6vw,22px) Fredoka,sans-serif;color:#fff;animation:axoUp .7s .7s both}
+.axo-rw{display:grid;gap:8px;justify-items:center;font-size:16px;animation:axoUp .7s .9s both}.axo-pv{font-size:26px;font-weight:700;padding:8px 18px;border:2px solid var(--tc);border-radius:16px;background:#0a0a0acc;box-shadow:0 0 30px color-mix(in srgb,var(--tc) 55%,transparent)}
+@keyframes axoUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+.axo-p{position:absolute;left:50%;top:42%;width:8px;height:8px;border-radius:50%;background:var(--tc);box-shadow:0 0 10px var(--tc);opacity:0;animation:axoP 1.6s ease-out forwards}
+@keyframes axoP{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.2)}}
+.axo .btn{animation:axoUp .7s 1.1s both}
+@media(prefers-reduced-motion:reduce){.axw::before,.axw::after,.rkf-elite::before,.rkf-elite::after,.rkf-obsidian::before,.rkf-obsidian::after,.rkf-netherite::before,.rkf-netherite::after,.rkf-bedrock::before,.rkf-bedrock::after{display:none}
+.rkf-netherite,.rkf-bedrock,.rk.rka,.cos.anp,.axi,.axo-rays,.axo-tr,.axo-p,.ach-c .acn,.ach-claim{animation:none!important}.axo-h,.axo-n,.axo-rw,.axo .btn{animation:none!important;opacity:1}}
