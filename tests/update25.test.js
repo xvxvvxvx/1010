@@ -4,9 +4,9 @@ const fs=require('fs'),vm=require('vm'),path=require('path');let pass=0,fail=0;c
 const sb={console,Math,Date,localStorage:{getItem(){return null},setItem(){},removeItem(){}}};vm.createContext(sb);
 vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/config.js'),'utf8')+';this.CFG=CFG',sb);const R=sb.CFG.RANKS;
 const reqs=R.filter(r=>r.req).map(r=>r.req.c);
-t('34 rank-ups, requirements strictly increasing',reqs.length===34&&reqs.every((c,i)=>i===0||c>reqs[i-1]));
-t('highest requirement is at most 1,000,000 (was 7,000,000)',Math.max(...reqs)<=1000000);
-t('rank round requirements cut ~20% (Unranked 40 .. Division 2 2400, was 50 .. 3000)',JSON.stringify(R.filter(r=>r.req).map(r=>r.req.r))==='[40,50,70,80,160,240,320,480,600,800,800,800,800,1000,1000,1200,1200,1200,1400,1600,1600,1200,1200,1400,1400,1400,1600,1600,1600,2000,2000,2400,2400,2400]');
+t('v3.0: 46 rank-ups (Unranked..Bedrock III), requirements strictly increasing',reqs.length===46&&reqs.every((c,i)=>i===0||c>reqs[i-1]));
+t('highest requirement stays below 3,500,000 (Bedrock II -> Bedrock III is 3,320,000)',Math.max(...reqs)<=3500000);
+t('rank round requirements (Unranked 40 .. Division 2 2400, then Division 1 .. Bedrock II 2600 .. 4000)',JSON.stringify(R.filter(r=>r.req).map(r=>r.req.r))==='[40,50,70,80,160,240,320,480,600,800,800,800,800,1000,1000,1200,1200,1200,1400,1600,1600,1200,1200,1400,1400,1400,1600,1600,1600,2000,2000,2400,2400,2400,2600,2600,2800,2800,3000,3000,3200,3200,3400,3600,3800,4000]');
 // grind model: Aviamasters-style bet of 20% of the starting cash earns ~0.09 x cash per round of rank money; money gate should be <= ~2.5x the round gate
 const ok=R.every((r,i)=>{if(!r.req)return true;const S=i===0?10:r.rw.c;return r.req.c/(r.req.r*.09*S)<=(i===0?7:4)});   // Unranked starts with only $10, so its first gate is a little looser
 t('every rank money gate is reachable by grinding (<= 4x the round gate at 20% bets)',ok);

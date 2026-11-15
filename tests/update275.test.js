@@ -50,7 +50,7 @@ Mastery.add('cases',150);t('claimed + new progress simultaneously: counter 250, 
 const tot=Mastery.claimableCount();t('claimableCount sums every objective',tot===3);
 Mastery.claimAll();t('claim all empties the queue without touching the counter',Mastery.claimableCount()===0&&Mastery.read().c.cases===250);
 Store.save();realLoad();t('claimed state persists',Mastery.stats('cases').claimed===4&&!Mastery.claim('cases',4).ok);
-t('gem rewards exist on every level of every objective and rise with difficulty',Mastery.tracks.every(x=>x.gems.every(v=>v>=1))&&Mastery.by.sc.gems[9]>Mastery.by.cases.gems[9]&&Mastery.by.pt.gems[9]>Mastery.by.sc.gems[9]);
+t('gem rewards exist on every level of every objective and rise with difficulty',Mastery.tracks.filter(x=>!x.gr).every(x=>x.gems.every(v=>v>=1))&&Mastery.by.sc.gems[9]>Mastery.by.cases.gems[9]&&Mastery.by.pt.gems[9]>Mastery.by.sc.gems[9]);
 // ---- 6. collections
 const tags=[...COS,...Cos.lim].filter(c=>c.type==='tag'),grads=[...COS,...Cos.lim].filter(c=>c.type==='grad');
 t('collection objectives: 10 tiers, strictly rising, balanced gem/coin rewards',['tc','gc'].every(id=>{const x=Mastery.by[id];return x.thr.length===10&&x.thr.every((v,i)=>!i||v>x.thr[i-1])&&x.cash.every((v,i)=>!i||v>x.cash[i-1])&&x.gems.every((v,i)=>!i||v>x.gems[i-1])}));

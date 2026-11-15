@@ -15,14 +15,14 @@ t('Cases: 48.79% of rounds are in profit (every tier at 1x or more)',Math.abs(ro
 const sb={console,Math,Date,Games:{},CFG:{AVI_SPEED:[[34,2.75],[30,2.5],[7,2],[3,1.5]]},document:{}};vm.createContext(sb);
 vm.runInContext(fs.readFileSync(R('js/games/aviamasters.js'),'utf8'),sb);const A=sb.Games.aviamasters,N=1500000;
 t('Aviamasters (v2.95): 250-300x is the top jackpot range and the rarest tier',A.JP[0][0]===250&&A.JP[0][1]===300&&A.JP.every(([lo,hi,p],i)=>hi<=300&&lo<hi&&(i===0||(p>A.JP[0][2]&&lo<A.JP[i-1][0]))));
-let s=0,land=0,pf=0,mx=0,crash=0,fall=0,u1=0,b12=0,b2=0;const jc={};
-for(let i=0;i<N;i++){const p=A.plan();if(p.crash){crash++;continue}if(p.fall){fall++;continue}land++;s+=p.m;mx=Math.max(mx,p.m);if(p.m>1)pf++;if(p.jp)jc[A.JP.find(r=>p.jp>=r[0]&&p.jp<=r[1]).slice(0,2).join('-')]=(jc[A.JP.find(r=>p.jp>=r[0]&&p.jp<=r[1]).slice(0,2).join('-')]||0)+1;else if(p.m<1)u1++;else if(p.m<2)b12++;else b2++}
+let s=0,land=0,pf=0,mx=0,crash=0,fall=0,u1=0,b12=0,b24=0,b45=0,b56=0,b67=0;const jc={};
+for(let i=0;i<N;i++){const p=A.plan();if(p.crash){crash++;continue}if(p.fall){fall++;continue}land++;s+=p.m;mx=Math.max(mx,p.m);if(p.m>1)pf++;if(p.jp)jc[A.JP.find(r=>p.jp>=r[0]&&p.jp<=r[1]).slice(0,2).join('-')]=(jc[A.JP.find(r=>p.jp>=r[0]&&p.jp<=r[1]).slice(0,2).join('-')]||0)+1;else if(p.m<1)u1++;else if(p.m<2)b12++;else if(p.m<4)b24++;else if(p.m<5)b45++;else if(p.m<6)b56++;else b67++}
 t('Aviamasters: no outcome above 300x (max seen '+mx.toFixed(2)+')',mx<=300);
 t('Aviamasters: return ~101% ('+(s/N*100).toFixed(1)+'%), profit '+(pf/N*100).toFixed(1)+'%, lands '+(land/N*100).toFixed(0)+'%',Math.abs(s/N-1.0096)<.025&&pf/N>.33&&pf/N<.42&&land/N>.88);
 const C=Object.fromEntries(A.CHANCES.map(([n,p])=>[n,p])),sum=A.CHANCES.reduce((a,r)=>a+r[1],0);
 t('Aviamasters: displayed chances total 100% ('+sum.toFixed(3)+')',Math.abs(sum-100)<.05);
-const emp={'Crashed into the sea':crash/N,'Slid off the runway':fall/N,'Landed under 1x (loss)':u1/N,'Landed 1x to 2x':b12/N,'Landed 2x or more':b2/N};
-t('Aviamasters: displayed physics chances match simulation within 0.4 points',Object.entries(emp).every(([k,v])=>Math.abs(C[k]-v*100)<.4),Object.entries(emp).map(([k,v])=>k+' '+(v*100).toFixed(2)).join(' | '));
+const emp={'Crashed into the sea':crash/N,'Slid off the runway':fall/N,'Landed under 1x (loss)':u1/N,'Landed 1x to 2x':b12/N,'Landed 2x to 4x':b24/N,'Landed 4x to 5x':b45/N,'Landed 5x to 6x':b56/N,'Landed 6x to 7x':b67/N};
+t('Aviamasters (v3.0 explicit landing bands): displayed chances match simulation within 0.4 points',Object.entries(emp).every(([k,v])=>Math.abs(C[k]-v*100)<.4),Object.entries(emp).map(([k,v])=>k+' '+(v*100).toFixed(2)).join(' | '));
 t('Aviamasters: 10-25x / 25-50x jackpot rows match simulation within 25%',[[10,25],[25,50]].every(([a,b])=>Math.abs((jc[a+'-'+b]||0)/N*100/C['Jackpot '+a+'–'+b+'x']-1)<.25));
 const mn=A.CHANCES.reduce((a,r)=>r[1]<a[1]?r:a);t('Aviamasters: the rarest displayed result is the 250–300x jackpot ('+mn[0]+', '+mn[1].toFixed(4)+'%)',mn[0]==='Jackpot 250–300x'&&Math.abs(mn[1]-.02)<.005);
 t('Aviamasters: chance panel renders every row',(h=>A.CHANCES.every(r=>h.includes(r[0])))(A.chancesHtml()));

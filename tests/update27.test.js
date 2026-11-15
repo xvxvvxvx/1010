@@ -73,13 +73,13 @@ fresh();Perks.grant(Perks.LIST[1]);Perks.grant(Perks.LIST[2]);t('Gems rewards ad
 // ---- 7. Rank-Up Ready (fulfils requirements, no rank-up)
 fresh();Store.d.rk=2;Store.d.balance=1000;Store.d.rc=500;Store.d.rq=3;const gm=Store.d.gems,b7=Store.d.balance,rq2=R[2].req;g=Perks.grant(Perks.LIST[12]);
 t('Rank-Up Ready raises rank money and rounds to the requirement; rank, wallet and Gems untouched',g.rank&&Store.d.rk===2&&Store.d.rc===rq2.c&&Store.d.rq===rq2.r&&Store.d.balance===b7&&Store.d.gems===gm&&Rank.status().ready);
-t('it counts toward the Rank-Up Ready objective',Mastery.read().c.ir===1);
+t('v3.0: Rank-Up Ready no longer feeds a Mastery objective (ir is now Rank-Up Gradients, driven by rank)',Mastery.read().c.ir===Store.d.rk&&Mastery.stats('ir').completed===1);
 t('the normal Rank-Up then works',(()=>{const rw=Rank.rankUp();return !!rw&&Store.d.rk===3})());
 fresh();Store.d.rk=2;Store.d.rc=rq2.c+5;Store.d.rq=rq2.r+5;g=Perks.grant(Perks.LIST[12]);t('already ready: becomes the $100,000 sale and never lowers progress',g.maxed&&!g.rank&&g.offer.amt===100000&&Store.d.rc===rq2.c+5&&Store.d.rq===rq2.r+5);
 fresh();Store.d.rk=LAST;Store.d.balance=777;g=Perks.grant(Perks.LIST[12]);t('max rank: $100,000 sale instead',g.maxed&&!g.rank&&g.offer.amt===100000&&Store.d.rk===LAST&&Store.d.balance===777);
 s1=Perks.sell(g);t('max-rank sale pays $100,000 and counts as rank money',s1.ok&&Store.d.balance===100777&&Store.d.rc===100000);
 // ---- 8. Mastery (manual claims)
-t('19 tracks x 10 levels, strictly rising requirements and cash, Gems never decrease',Mastery.tracks.length===19&&Mastery.tracks.every(x=>x.thr.length===10&&x.cash.length===10&&x.gems.length===10&&x.gems[0]>=1&&x.thr.every((v,i)=>i===0||v>x.thr[i-1])&&x.cash.every((v,i)=>i===0||v>x.cash[i-1])&&x.gems.every((v,i)=>i===0||v>=x.gems[i-1])));
+t('19 tracks x 10 levels, strictly rising requirements and cash, Gems never decrease',Mastery.tracks.length===19&&Mastery.tracks.every(x=>x.thr.length===10&&x.cash.length===10&&x.gems.length===10&&x.thr.every((v,i)=>i===0||v>x.thr[i-1])&&(x.gr||(x.gems[0]>=1&&x.cash.every((v,i)=>i===0||v>x.cash[i-1])&&x.gems.every((v,i)=>i===0||v>=x.gems[i-1])))));
 t('example milestone: 20 games played = $250 + 1 Gem',Mastery.by.mn.thr[0]===20&&Mastery.by.mn.cash[0]===250&&Mastery.by.mn.gems[0]===1);
 fresh();b0=Store.d.balance;const gem0=Store.d.gems;let ev=Mastery.add('mn',19);t('19 Mines games: no level yet',ev.length===0&&Store.d.balance===b0);
 ev=Mastery.add('mn',1);t('20th game COMPLETES level 1 but pays nothing until claimed',ev.length===1&&ev[0].lv===1&&Store.d.balance===b0&&Store.d.gems===gem0&&Mastery.stats('mn').completed===1&&Mastery.stats('mn').claimable===1&&Mastery.stats('mn').claimed===0);
@@ -100,7 +100,7 @@ fresh();Econ.settle('AVIAMASTERS',10,39.9);Econ.settle('AVIAMASTERS',10,45);Econ
 fresh();Store.d.bx=Date.now()+1e6;Econ.settle('AVIAMASTERS',10,45);t('2X profit bonus does not distort the landing band (4.5x stays 4-5x)',Mastery.read().c.a4===1&&Mastery.read().c.a5===0);
 fresh();Econ.settle('AVIAMASTERS',10,45);const sig=store['0-100_v2.7_mastery'];t('mastery persists in its own key',!!sig&&Mastery.read().c.a4===1);
 // ---- 9. limited cosmetics
-t('62 limited cosmetics: 57 mastery (3 per objective: tag 3 / gradient 6 / tag 10) + 5 Pirate',Cos.lim.length===62&&Cos.lim.filter(c=>c.src==='mastery').length===57&&Mastery.tracks.every(x=>['tag','grad','tag'].join()===x.cos.map(id=>Cos.by(id).type).join())&&new Set(Cos.lim.map(c=>c.id)).size===62);
+t('62 limited cosmetics: 57 mastery (3 per objective: tag 3 / gradient 6 / tag 10) + 5 Pirate',Cos.lim.length===62&&Cos.lim.filter(c=>c.src==='mastery').length===57&&Mastery.tracks.filter(x=>!x.gr).every(x=>['tag','grad','tag'].join()===x.cos.map(id=>Cos.by(id).type).join())&&new Set(Cos.lim.map(c=>c.id)).size===62);
 t('every limited cosmetic has name, description, effect, 3 colours, "limited" rarity; none are in the shop/crate catalogue',Cos.lim.every(c=>c.name&&c.desc&&c.lfx&&c.cols.length===3&&c.rar==='limited'&&c.lim&&!COS.includes(c)&&Cos.by(c.id)===c));
 t('Flight Taker is the Aviamasters Level 3 tag with wind effects',Cos.by('m_av_3').label==='[FLIGHT TAKER]'&&Cos.by('m_av_3').lfx==='wind'&&/ lm-wind/.test(Cos.html(Cos.by('m_av_3'))));
 t('Pirate cosmetics: flag / spark / spark / coins down / hat',['t_pirate:flag','g_treasure:spark','t_treasure:spark','g_pirate:coinD','t_pking:hat'].every(x=>{const[i,f]=x.split(':');return Cos.by(i).lfx===f&&Cos.by(i).src==='pirate'}));

@@ -50,7 +50,7 @@ const pg=src('js/progress.js');
 t('Goals: eye toggle, two bars, remembered choice',/data-geye/.test(pg)&&/gold_goal_hide/.test(pg)&&/bar2\('Money'/.test(pg)&&/bar2\('Rounds'/.test(pg)&&/aria-label=.*Hide objectives/.test(pg));
 t('Goals: strip repaints when either bar or the eye changes',/hidden\(\),v\.bars/.test(pg));
 // ---- release wiring
-t('service worker cache bumped and game page shows Update 2.95',/gold-offline-v2\.95/.test(src('sw.js'))&&/Update 2\.95/.test(src('game.html')));
+t('service worker cache bumped and game page shows the current update (2.95 -> 3.0)',/gold-offline-v(2\.95|3\.0)/.test(src('sw.js'))&&/Update (2\.95|3\.0)/.test(src('game.html')));
 t('Exploit Audit file exists',fs.existsSync(R('EXPLOIT_AUDIT.md'))&&/Exploit Audit/.test(src('EXPLOIT_AUDIT.md')));
 const av=src('js/games/aviamasters.js');
 t('Aviamasters: landing-chances dropdown is animated (body wrapper + reduced-motion path)',/class="avp-body"/.test(av)&&/prefers-reduced-motion/.test(av)&&/avp-body/.test(src('css/update29.css')));
