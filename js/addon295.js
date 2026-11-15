@@ -1,6 +1,6 @@
 /* v2.95 add-on runtime layer (loaded last). NOTE: the game has no server, so "authoritative" here means: enforced in the only code path that can
    grant / settle (Crate.open, Econ.cool, App.settle), stored under the existing signed-save mechanism, and synchronous (no await between roll and save).
-   1) Pirate Ship discovery overlay (used by js/games/aviamasters.js)  2) Gem-Shop Epic+ pity  3) Chicken round-farming limits
+   1) Pirate Ship discovery overlay (used by js/games/aviamasters.js)  2) Gem-Shop Epic+ pity (v3.0: every spin increments; Epic / Legendary rolls never reset it, only the guaranteed spin does)  3) Chicken round-farming limits
    4) Cases Pirate-reward previews  5) crate odds + Mastery collection thresholds for the new cosmetics. */
 const PirateShip295=(()=>{
 let cur=null;
@@ -68,7 +68,7 @@ if(typeof document!=='undefined'&&!document.getElementById('stk-ps295')){const s
 /* ---- 5) odds for the new cosmetics: keep every rarity's TOTAL chance exactly as before (Crate.table normalises per-item shares) ---- */
 if(typeof CFG!=='undefined'&&CFG.CRATE){CFG.CRATE.tag.epic={pot:15};CFG.CRATE.grad.epic={pot:30};CFG.CRATE.grad.legendary={pot:10}}
 /* collections: Level 10 stays "everything except the reward itself" */
-try{if(typeof Mastery!=='undefined'){const all=[...COS,...Cos.lim];Mastery.by.tc.thr[9]=all.filter(c=>c.type==='tag').length-1;Mastery.by.gc.thr[9]=all.filter(c=>c.type==='grad').length}}catch(e){console.error(e)}
+try{if(typeof Mastery!=='undefined'){const all=[...COS,...Cos.lim,...(Cos.rank||[]),...(Cos.ach||[])];   /* v3.0: rank gradients + achievement cosmetics count too, so Level 10 still means EVERYTHING */Mastery.by.tc.thr[9]=all.filter(c=>c.type==='tag').length-1;Mastery.by.gc.thr[9]=all.filter(c=>c.type==='grad').length}}catch(e){console.error(e)}
 /* ---- 2) Epic+ pity (own signed key; one counter per crate kind) ---- */
 const PK='0-100_v2.95_pity',LIM=10,pity={
 get(){const r=Store.readSigned(PK),o={tags:0,grads:0};if(r.status==='ok'&&r.raw!=null)try{const j=JSON.parse(r.raw);for(const k in o)o[k]=Math.max(0,Math.min(LIM,Math.floor(Store.num(j&&j[k],0))))}catch(e){}return o},
@@ -80,14 +80,15 @@ const t=Crate.table(kind).filter(r=>r.c.rar==='epic'||r.c.rar==='legendary'),tot
 /* the counter is updated in the same synchronous call that deducts the Gems and saves the item, so a refresh / interrupted animation can never lose or repeat it */
 Crate.open=function(kind,rnd){if(!Crate.kinds[kind])return oo.call(this,kind,rnd);if(busy)return{ok:false,msg:'Please wait'};busy=true;
 try{const p=pity.get();force=p[kind]>=LIM;const r=oo.call(this,kind,rnd);force=false;
-if(r&&r.ok){const hit=r.c.rar==='epic'||r.c.rar==='legendary';p[kind]=hit?0:Math.min(LIM,p[kind]+1);pity.put(p)}return r}finally{force=false;busy=false}};
+/* v3.0: EVERY spin counts toward pity, whatever it rolls. A natural Epic / Legendary does NOT reset the counter; only the guaranteed spin (counter already at LIM) consumes it. Tag and Gradient counters stay independent. */
+if(r&&r.ok){const was=p[kind]>=LIM;p[kind]=was?0:Math.min(LIM,p[kind]+1);pity.put(p)}return r}finally{force=false;busy=false}};
 Crate.pity=pity;Crate.PITY_LIMIT=LIM}
 if(typeof Pages!=='undefined'&&typeof document!=='undefined'&&Pages.shop){
 const bm=Pages.shop.mount;
 const ui=app=>{const p=pity.get();app.querySelectorAll('.crt').forEach(sec=>{const rb=sec.querySelector('[data-roll]'),cv=sec.querySelector('.crv');if(!rb||!cv)return;const k=rb.dataset.roll,n=p[k]||0;let el=cv.querySelector('.pity');
 if(!el){el=document.createElement('div');el.className='pity';cv.appendChild(el)}
 const v=k+n;if(el.dataset.v===v)return;el.dataset.v=v;
-el.innerHTML=`<div class="pity-t">EPIC+ PITY <b>${n}/${LIM}</b></div><div class="pity-b" role="img" aria-label="${n} of ${LIM} spins without an Epic or better">${Array.from({length:LIM},(_,i)=>`<i${i<n?' class="on"':''}></i>`).join('')}</div><div class="pity-n">${n>=LIM?'Next spin: guaranteed Epic or Legendary!':`Guaranteed Epic+ on spin ${LIM+1}`}</div>`})};
+el.innerHTML=`<div class="pity-t">EPIC+ PITY <b>${n}/${LIM}</b></div><div class="pity-b" role="img" aria-label="${n} of ${LIM} spins without an Epic or better">${Array.from({length:LIM},(_,i)=>`<i${i<n?' class="on"':''}></i>`).join('')}</div><div class="pity-n">${n>=LIM?'Next spin: guaranteed Epic or Legendary!':`Guaranteed Epic+ on spin ${LIM+1} (every spin counts)`}</div>`})};
 Pages.shop.mount=function(app){const c=bm.call(this,app);ui(app);const mo=new MutationObserver(()=>ui(app));mo.observe(app,{childList:true});return()=>{mo.disconnect();if(c)c()}};
 if(!document.getElementById('stk-pity')){const s=document.createElement('style');s.id='stk-pity';s.textContent=`.pity{margin-top:8px;display:grid;gap:3px;font:700 11px Fredoka,sans-serif}.pity-t{letter-spacing:1px;color:#e9c9ff}.pity-t b{color:#fff}
 .pity-b{display:flex;gap:3px;justify-content:center}.pity-b i{flex:1;max-width:16px;height:8px;border-radius:3px;background:#262626;border:1px solid #ffffff55}.pity-b i.on{background:linear-gradient(#f0abfc,#be0bb1);border-color:#f0abfc}

@@ -1,4 +1,7 @@
-/* v2.75 Mastery: 19 independent objectives x 10 levels (17 play objectives + Tag Collection + Gradient Collection). Progress lives in its own signed save key, so existing saves are untouched.
+/* v3.0: the "Rank-Up Ready Rewards" objective (ir) is replaced by RANK-UP GRADIENTS: the counter is your highest rank (synced from Store.d.rk / lifetime rkh), each of the 10 levels awards ONLY rank gradients (no Coin, no Gems):
+   level n grants the gradient of the milestone rank IRT[n-1] plus every lower rank gradient not yet granted, so all 47 rank gradients (rg_0 .. rg_46, js/cos30.js) are obtainable. Old ir progress / claims (they counted Rank-Up Ready rewards) are reset ONCE (save version v:3);
+   already-claimed Coin / Gems / the legacy cosmetics m_ir_3 / m_ir_6 / m_ir_10 stay with the player (limited.js still resolves those ids).
+   v2.75 Mastery: 19 independent objectives x 10 levels (17 play objectives + Tag Collection + Gradient Collection). Progress lives in its own signed save key, so existing saves are untouched.
    MANUAL CLAIMS: reaching a level only COMPLETES it. The reward (coins + Gems + the level's cosmetic) is paid when the player presses CLAIM on the Mastery page. Three separate facts per level:
      completed (d.l = number of completed levels), claimed (d.k = bit mask, bit n-1 = level n claimed), claimable = completed and not claimed.
    Claiming never touches the counter d.c, so progress toward the next milestone keeps running (and keeps completing further levels) while rewards wait to be claimed.
@@ -18,6 +21,7 @@ R2=[1,2,4,8,15,30,50,80,125,200],R2C=[400,800,1400,2400,4000,7000,12000,20000,32
 const GE={easy:[1,1,2,2,3,4,5,6,8,10],mid:[1,2,2,3,4,5,7,9,12,15],hard:[2,2,3,4,6,8,10,13,16,20],elite:[2,3,4,6,8,11,14,18,23,30],tok:[3,4,6,8,10,14,18,24,32,45]};
 /* collections: Level 10 = all tags / gradients except the reward itself (69 tags - 1, 39 gradients). Same coin / Gem structure for both. */
 const TCT=[3,6,12,20,30,40,50,58,64,68],GCT=[2,4,7,11,17,23,28,33,36,39],CCASH=[500,1000,2000,3500,6000,10000,16000,25000,40000,70000],CGEM=[2,3,4,6,8,11,15,20,27,40];
+const IRT=[1,5,10,15,20,25,30,35,40,46],Z10=Array(10).fill(0);
 const tracks=[
 T('cases','Cases Opened','cases opened',G,GC,GE.easy),T('av','Aviamasters Flights Launched','flights launched',G,GC,GE.easy),T('bj','Blackjack Games Played','games played',G,GC,GE.easy),
 T('pl','Plinko Balls Deployed','balls deployed',[100,300,750,2000,5000,10000,25000,50000,100000,250000],GC,GE.easy),T('mn','Mines Games Played','games played',G,GC,GE.easy),
@@ -25,14 +29,16 @@ T('fl','Flip Games Played','games played',H,GC,GE.easy),T('dn','Double or Nothin
 T('lg','Legendary Case Drops','Legendary drops',R1,R1C,GE.mid),T('my','Mythic Case Drops','Mythic drops',R2,R2C,GE.hard),T('sc','Secret Case Drops','Secret drops',R3,R3C,GE.elite),
 T('pt','Pirate Tokens Obtained','Pirate Tokens',[1,2,3,4,5,7,10,15,20,30],[2500,5000,8000,12000,18000,28000,45000,70000,110000,180000],GE.tok),
 T('a4','Aviamasters Landings at 4-5x','landings at 4-5x',R1,R1C,GE.mid),T('a5','Aviamasters Landings at 5-6x','landings at 5-6x',R2,R2C,GE.hard),T('a6','Aviamasters Landings at 6-7x','landings at 6-7x',R3,R3C,GE.elite),T('a7','Aviamasters Landings at 7x+','landings at 7x+',R3,R3C,GE.elite),
-T('ir','Rank-Up Ready Rewards','rank-up ready rewards',[1,2,3,5,7,10,14,18,23,30],[2500,5000,9000,15000,25000,40000,65000,100000,150000,250000],GE.tok),
+T('ir','Rank-Up Gradients','rank reached',IRT,Z10,Z10,1),
 T('tc','Tag Collection','unique tags collected',TCT,CCASH,CGEM,1),T('gc','Gradient Collection','unique gradients collected',GCT,CCASH,CGEM,1)];
 tracks.forEach(t=>{t.cos=COSLV.map(l=>'m_'+t.id+'_'+l)});
+const IR=tracks.find(t=>t.id==='ir');IR.gr=1;IR.cos=[];   // gr = pays rank gradients only
+const irIds=lv=>{const a=lv===1?0:IR.thr[lv-2]+1,o=[];for(let i=a;i<=IR.thr[lv-1];i++)o.push('rg_'+i);return o};
 const by=Object.fromEntries(tracks.map(t=>[t.id,t])),MAP={PLINKO:'pl',MINES:'mn',FLIP:'fl','DOUBLE OR NOTHING':'dn',CHICKEN:'ck',BLACKJACK:'bj',AVIAMASTERS:'av'};
-const blank=()=>({c:{},l:{},k:{}}),int=v=>Math.max(0,Math.floor(Store.num(v,0))),MASK=(1<<LV)-1,pop=m=>{let n=0;for(;m;m&=m-1)n++;return n};
+const blank=()=>({v:3,c:{},l:{},k:{}}),int=v=>Math.max(0,Math.floor(Store.num(v,0))),MASK=(1<<LV)-1,pop=m=>{let n=0;for(;m;m&=m-1)n++;return n};
 function read(){const r=Store.readSigned(KEY),d=blank();let o=null;if(r.status!=='bad'&&r.raw!=null)try{o=JSON.parse(r.raw)}catch(e){}
-const old=!(o&&o.k&&typeof o.k==='object');   // v2.7 save: completed levels were already paid -> claimed
-tracks.forEach(t=>{const l=Math.min(LV,int(o&&o.l&&o.l[t.id])),full=(1<<l)-1;d.c[t.id]=int(o&&o.c&&o.c[t.id]);d.l[t.id]=l;d.k[t.id]=old?full:(int(o.k[t.id])&MASK&full)});return d}
+const old=!(o&&o.k&&typeof o.k==='object'),mig=!(o&&o.v>=3);   // v2.7 save: completed levels were already paid -> claimed
+tracks.forEach(t=>{const l=Math.min(LV,int(o&&o.l&&o.l[t.id])),full=(1<<l)-1;d.c[t.id]=int(o&&o.c&&o.c[t.id]);d.l[t.id]=l;d.k[t.id]=old?full:(int(o.k[t.id])&MASK&full);if(t.gr&&mig){d.c[t.id]=0;d.l[t.id]=0;d.k[t.id]=0}});return d}
 const write=d=>Store.writeSigned(KEY,JSON.stringify(d));
 /* levels that became complete for one objective (counter reached the threshold); NOTHING is paid here */
 function advance(d,t,due){while(d.l[t.id]<LV&&d.c[t.id]>=t.thr[d.l[t.id]])due.push({t,lv:++d.l[t.id]})}
@@ -42,10 +48,12 @@ if(!any)return[];write(d);if(due.length)notify(due);return due}
 /* collections: distinct owned cosmetic ids of each type (the inventory never holds duplicates; the Set guards against a corrupt save) */
 function owned(){const o={tc:0,gc:0};if(!Store.d||!Array.isArray(Store.d.inv))return o;new Set(Store.d.inv).forEach(id=>{const c=Cos.by(id);if(c)o[c.type==='tag'?'tc':'gc']++});return o}
 function syncCollection(){const o=owned(),d=read(),due=[];let ch=false;
-for(const id of['tc','gc']){const t=by[id];if(o[id]>d.c[id]){d.c[id]=o[id];ch=true}advance(d,t,due)}
+o.ir=Store.d?Math.max(Store.d.rk|0,(Store.d.ls&&Store.d.ls.rkh)|0):0;   // Rank-Up Gradients counter = highest rank reached (high-water mark)
+for(const id of['tc','gc','ir']){const t=by[id];if(o[id]>d.c[id]){d.c[id]=o[id];ch=true}advance(d,t,due)}
 if(ch||due.length)write(d);if(due.length)notify(due);return due}
 /* ---------- manual claims ---------- */
-function pay(t,lv){const cash=t.cash[lv-1],gems=t.gems[lv-1];Econ.addCoins(cash);if(gems){Store.check();Store.d.gems+=gems;Store.sync()}
+function pay(t,lv){if(t.gr){const ids=irIds(lv);ids.forEach(id=>{if(Cos.by(id)&&!Store.d.inv.includes(id))Store.d.inv.push(id)});Store.save();try{App.bal()}catch(e){}return{t,lv,cash:0,gems:0,gr:1,ids,cos:Cos.by(ids[ids.length-1])}}
+const cash=t.cash[lv-1],gems=t.gems[lv-1];Econ.addCoins(cash);if(gems){Store.check();Store.d.gems+=gems;Store.sync()}
 const c=Cos.by('m_'+t.id+'_'+lv);if(c&&!Store.d.inv.includes(c.id))Store.d.inv.push(c.id);Store.save();try{App.bal()}catch(e){}return{t,lv,cash,gems,cos:c||null}}
 /* the claimed bit is saved BEFORE paying, so a crash or double click can never pay twice. The counter d.c is never touched: progress toward the next level continues. */
 function claim(id,lv){const t=by[id];lv=Math.floor(lv);if(!t||!(lv>=1&&lv<=LV))return{ok:false,msg:'Unknown reward'};Store.load();syncCollection();const d=read();
@@ -74,10 +82,10 @@ function notify(ev){if(typeof document==='undefined')return;if(ev.length>3)Q.pus
 function pump(){if(showing||!Q.length)return;if(document.querySelector('.pt-ov,.pk-ov,.crov')){setTimeout(pump,900);return}
 showing=true;const e=Q.shift(),b=document.createElement('div');b.className='msb';b.setAttribute('role','status');
 b.innerHTML=e.sum?`<span class="msm">${medal(46)}</span><div><b>${e.sum} MASTERY REWARDS READY</b><span>Open the Mastery page to claim them</span></div>`
-:`<span class="msm">${medal(46)}</span><div><b>MASTERY LEVEL ${e.lv} COMPLETE</b><span>${e.t.name}</span><em>Claim it on the Mastery page: $${Econ.fi(e.t.cash[e.lv-1])} + ${e.t.gems[e.lv-1]} Gems${Cos.by('m_'+e.t.id+'_'+e.lv)?' + cosmetic':''}</em></div>`;
+:`<span class="msm">${medal(46)}</span><div><b>MASTERY LEVEL ${e.lv} COMPLETE</b><span>${e.t.name}</span><em>Claim it on the Mastery page: ${e.t.gr?'rank gradients':'$'+Econ.fi(e.t.cash[e.lv-1])+' + '+e.t.gems[e.lv-1]+' Gems'+(Cos.by('m_'+e.t.id+'_'+e.lv)?' + cosmetic':'')}</em></div>`;
 document.body.appendChild(b);requestAnimationFrame(()=>b.classList.add('in'));try{FX.confetti(b,28)}catch(x){}
 setTimeout(()=>{b.classList.remove('in');setTimeout(()=>{b.remove();showing=false;pump()},450)},3400)}
-const api={tracks,by,LV,COSLV,read,addMany,add:(id,n=1)=>addMany({[id]:n}),cases,record,total,devComplete,devReset,medal,KEY,claim,claimAll,claimable,claimableCount,stats,syncCollection,owned,TCT,GCT};
+const api={tracks,by,LV,COSLV,irIds,read,addMany,add:(id,n=1)=>addMany({[id]:n}),cases,record,total,devComplete,devReset,medal,KEY,claim,claimAll,claimable,claimableCount,stats,syncCollection,owned,TCT,GCT};
 /* every settled round feeds Mastery (wrapped once; Cases count themselves per row) */
 {const s=Econ.settle;Econ.settle=function(g,b,gross,o){const pay=s.call(this,g,b,gross,o);try{if(!(o&&o.noCount)&&b>=CFG.ROUND_MIN_BET-1e-9)api.record(g,b,gross)}catch(e){console.error(e)}return pay}}
 /* collections follow the inventory: every save that gained a cosmetic (shop, crates, Pirate rewards, mastery claims) refreshes them at once */
@@ -108,16 +116,16 @@ Pages.mastery={mount(app){let sel=Mastery.tracks[0].id;
 const fmt=n=>(+n).toLocaleString('en-US'),M=Mastery,cosOf=(t,l)=>{const i=M.COSLV.indexOf(l);return i<0?null:Cos.by(t.cos[i])};
 const render=()=>{M.syncCollection();const D=M.read(),T=M.by[sel],S=M.stats(sel,D),all=M.claimableCount();
 const card=t=>{const l=D.l[t.id],c=D.c[t.id],mx=l>=M.LV,nx=t.thr[l],cl=M.stats(t.id,D).claimable;
-return `<button class="msc${t.id===sel?' on':''}${mx?' max':''}${cl?' rdy':''}" data-t="${t.id}" aria-pressed="${t.id===sel}">${cl?`<span class="mscn">${cl} TO CLAIM</span>`:''}<span class="msn">${t.name}</span><span class="msl">${mx?'COMPLETED':'LEVEL '+l+' / '+M.LV}</span>${mx?'':Dash.bar(`${fmt(c)} / ${fmt(nx)}`,Math.min(1,c/nx))}<small>${mx?fmt(c)+' '+t.unit:'Next: $'+Econ.fi(t.cash[l])+' + '+t.gems[l]+' Gems'+(cosOf(t,l+1)?' + cosmetic':'')}</small></button>`};
-const row=l=>{const c=D.c[T.id],done=l<=D.l[T.id],claimed=!!(D.k[T.id]&(1<<(l-1))),cur=l===D.l[T.id]+1,cs=cosOf(T,l),pg=cur?Math.min(1,c/T.thr[l-1]):0;
-return `<div class="msr${done?' done':''}${claimed?' claimed':''}${done&&!claimed?' ready':''}${cur?' cur':''}"><span class="msv">LEVEL ${l}</span><span class="msq">${fmt(T.thr[l-1])} ${T.unit}${cur?`<br><small>${fmt(Math.min(c,T.thr[l-1]))} / ${fmt(T.thr[l-1])} (${Math.floor(pg*100)}%)</small>`:''}</span><span class="msc2">$${Econ.fi(T.cash[l-1])}<span>${gemIcon(14)} ${T.gems[l-1]}</span></span>
-<span class="mscos">${cs?`<span class="pv">${prevHtml(cs)}</span><small>${cs.name} &bull; ${rarTxt(cs)} &bull; unsellable<br>${cs.desc.replace(/^Mastery reward: [^.]*\. Limited and unsellable\. /,'')}</small>`:'<small>Coins and Gems only</small>'}</span>${claimed?'<span class="msk ok" aria-label="Claimed">&#10003; CLAIMED</span>':done?`<button class="btn msclaim" data-claim="${l}" type="button">CLAIM</button>`:'<span class="msk" aria-label="Locked">LOCKED</span>'}</div>`};
+return `<button class="msc${t.id===sel?' on':''}${mx?' max':''}${cl?' rdy':''}" data-t="${t.id}" aria-pressed="${t.id===sel}">${cl?`<span class="mscn">${cl} TO CLAIM</span>`:''}<span class="msn">${t.name}</span><span class="msl">${mx?'COMPLETED':'LEVEL '+l+' / '+M.LV}</span>${mx?'':Dash.bar(`${fmt(c)} / ${fmt(nx)}`,Math.min(1,c/nx))}<small>${mx?fmt(c)+' '+t.unit:(t.gr?'Next: '+CFG.RANKS[nx].n+' gradient':'Next: $'+Econ.fi(t.cash[l])+' + '+t.gems[l]+' Gems'+(cosOf(t,l+1)?' + cosmetic':''))}</small></button>`};
+const row=l=>{const c=D.c[T.id],done=l<=D.l[T.id],claimed=!!(D.k[T.id]&(1<<(l-1))),cur=l===D.l[T.id]+1,cs=T.gr?Cos.by('rg_'+T.thr[l-1]):cosOf(T,l),pg=cur?Math.min(1,c/T.thr[l-1]):0;
+return `<div class="msr${done?' done':''}${claimed?' claimed':''}${done&&!claimed?' ready':''}${cur?' cur':''}"><span class="msv">LEVEL ${l}</span><span class="msq">${fmt(T.thr[l-1])} ${T.unit}${cur?`<br><small>${fmt(Math.min(c,T.thr[l-1]))} / ${fmt(T.thr[l-1])} (${Math.floor(pg*100)}%)</small>`:''}</span><span class="msc2">${T.gr?'Rank gradients':'$'+Econ.fi(T.cash[l-1])+'<span>'+gemIcon(14)+' '+T.gems[l-1]+'</span>'}</span>
+<span class="mscos">${cs?`<span class="pv">${prevHtml(cs)}</span><small>${cs.name} &bull; ${rarTxt(cs)} &bull; unsellable<br>${T.gr?'Also unlocks every lower rank gradient not yet owned ('+M.irIds(l).length+' this level). No Coin or Gems.':cs.desc.replace(/^Mastery reward: [^.]*\. Limited and unsellable\. /,'')}</small>`:'<small>Coins and Gems only</small>'}</span>${claimed?'<span class="msk ok" aria-label="Claimed">&#10003; CLAIMED</span>':done?`<button class="btn msclaim" data-claim="${l}" type="button">CLAIM</button>`:'<span class="msk" aria-label="Locked">LOCKED</span>'}</div>`};
 app.innerHTML=`<h2 class="sec">🥇 Mastery ›</h2>${gchip()}<div class="dp qp2"><p class="qhint">Every objective levels up on its own. Completed levels are claimed by hand, and claiming never resets your progress toward the next level. Levels completed: <b>${M.total()}</b> / ${M.tracks.length*M.LV}${all?` &bull; <b>${all}</b> ready to claim`:''}</p>${all?'<button class="btn msall" id="msall" type="button" style="margin-bottom:12px">CLAIM ALL ('+all+')</button>':''}
 <div class="msg">${M.tracks.map(card).join('')}</div><h3 class="lined msh">${M.medal(26)} ${T.name}${S.claimable?`<button class="btn msall" id="mstall" type="button">CLAIM ${S.claimable} REWARD${S.claimable>1?'S':''}</button>`:''}</h3><p class="mssm">Completed <b>${S.completed}</b> &bull; Claimable <b>${S.claimable}</b> &bull; Claimed <b>${S.claimed}</b> (of ${M.LV})</p><div class="mst">${Array.from({length:M.LV},(_,i)=>row(i+1)).join('')}</div></div>`;
 app.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{sel=b.dataset.t;render()});
 const done=(r,msg)=>{if(!r.ok){App.toast(r.msg||'Nothing to claim');render();return}
-const gm=r.gems,co=r.cash,cs=r.cos;App.toast(`${msg}: +$${Econ.fi(co)}${gm?`, +${gm} Gem${gm>1?'s':''}`:''}${(Array.isArray(cs)?cs.length:cs)?', new cosmetic':''}`);render();try{FX.confetti(app.querySelector('.qp2'),36)}catch(e){}};
-app.querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>{if(b.dataset.busy)return;b.dataset.busy=1;const r=M.claim(sel,+b.dataset.claim);done(r&&r.ok?{ok:true,cash:r.cash,gems:r.gems,cos:r.cos}:r,'Claimed')});
+const gm=r.gems,co=r.cash,cs=r.cos;if(r.gr){App.toast(`${msg}: ${r.ids.length} rank gradient${r.ids.length>1?'s':''}`);render();return}App.toast(`${msg}: +$${Econ.fi(co)}${gm?`, +${gm} Gem${gm>1?'s':''}`:''}${(Array.isArray(cs)?cs.length:cs)?', new cosmetic':''}`);render();try{FX.confetti(app.querySelector('.qp2'),36)}catch(e){}};
+app.querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>{if(b.dataset.busy)return;b.dataset.busy=1;const r=M.claim(sel,+b.dataset.claim);done(r&&r.ok?{ok:true,cash:r.cash,gems:r.gems,cos:r.cos,gr:r.gr,ids:r.ids}:r,'Claimed')});
 const a=$('msall'),s=$('mstall');if(a)a.onclick=()=>{a.disabled=true;done(M.claimAll(),'Claimed all')};if(s)s.onclick=()=>{s.disabled=true;done(M.claimAll(sel),'Claimed')}};
 render()}};
 /* inventory: limited cosmetics show an unsellable badge instead of a SELL button */

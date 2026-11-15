@@ -44,7 +44,20 @@ RANKS:[
 {n:'Division 4', g:['#b8962e','#4a4a4a'],req:{c:765000,r:2400}, rw:{c:3500,g:28},ic:'div4'},
 {n:'Division 3', g:['#b8860b','#3a3a3a'],req:{c:855000,r:2400}, rw:{c:4000,g:30},ic:'div3'},
 {n:'Division 2', g:['#c8860b','#b01010'],req:{c:990000,r:2400}, rw:{c:4500,g:32},ic:'div2'},
-{n:'Division 1', g:['#e69a1a','#a01010'],req:null,               rw:{c:5000,g:34},ic:'div1'}],
+{n:'Division 1', g:['#e69a1a','#a01010'],req:{c:1100000,r:2600}, rw:{c:5000,g:34},ic:'div1'},
+// v3.0 Rank Expansion 3 (Elite, Obsidian, Netherite, Bedrock). req = what is needed to rank UP from this rank; Bedrock III (req:null) is the maximum. Icons: img/elite.jpg, obsidian.jpg, netherite.jpg, bedrock.jpg (white placeholders until art is dropped in; filenames are mapped in BIMG, js/ui.js).
+{n:'Elite I', g:['#000000','#ffd84d'],req:{c:1220000,r:2600}, rw:{c:5500,g:36},ic:'elite'},
+{n:'Elite II', g:['#000000','#ffd84d'],req:{c:1350000,r:2800}, rw:{c:6000,g:38},ic:'elite'},
+{n:'Elite III', g:['#000000','#ffd84d'],req:{c:1500000,r:2800}, rw:{c:6500,g:40},ic:'elite'},
+{n:'Obsidian I', g:['#0b0014','#a855f7'],req:{c:1660000,r:3000}, rw:{c:7000,g:42},ic:'obsidian'},
+{n:'Obsidian II', g:['#0b0014','#a855f7'],req:{c:1830000,r:3000}, rw:{c:7500,g:44},ic:'obsidian'},
+{n:'Obsidian III', g:['#0b0014','#a855f7'],req:{c:2020000,r:3200}, rw:{c:8000,g:46},ic:'obsidian'},
+{n:'Netherite I', g:['#2b2b30','#6b6b75'],req:{c:2230000,r:3200}, rw:{c:8500,g:48},ic:'netherite'},
+{n:'Netherite II', g:['#2b2b30','#6b6b75'],req:{c:2460000,r:3400}, rw:{c:9000,g:50},ic:'netherite'},
+{n:'Netherite III', g:['#2b2b30','#6b6b75'],req:{c:2720000,r:3600}, rw:{c:9500,g:52},ic:'netherite'},
+{n:'Bedrock I', g:['#000000','#ffffff'],req:{c:3000000,r:3800}, rw:{c:10000,g:54},ic:'bedrock'},
+{n:'Bedrock II', g:['#000000','#ffffff'],req:{c:3320000,r:4000}, rw:{c:10500,g:56},ic:'bedrock'},
+{n:'Bedrock III', g:['#000000','#ffffff'],req:null, rw:{c:11000,g:58},ic:'bedrock'}],
 // Animation speed by rank index. Highest matching tier wins; each [rankIndex,speed] is also what the Rank-Up page displays.
 // Animation only: never payouts or odds. Cases: Silver=3, Amethyst=7, Impossible Demon I=24. Aviamasters: Silver=3, Amethyst=7, Division 5=30, Division 1=34.
 SPIN_SPEED:[[24,2.5],[7,2],[3,1.5]],

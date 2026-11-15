@@ -26,9 +26,9 @@ effMult:(now)=>Econ.bonusActive(now)?CFG.DAILY.BONUS_MULT:1,                  //
 summary:()=>Econ.bonusActive()?`2X 01O0coin bonus active (profit x${CFG.DAILY.BONUS_MULT})`:'No active profit bonus',
 /* gross = total returned INCLUDING stake. Only positive net profit is multiplied (by the 2X bonus, if active). */
 payout(bet,gross,now){const net=Econ.r2(gross-bet);return net>0?Econ.r2(bet+net*Econ.effMult(now)):Econ.r2(gross)},
-settle(game,bet,gross,opts){Store.check();const pay=Econ.payout(bet,gross),d=Store.d,net=Econ.r2(pay-bet);d.balance=Econ.r2(d.balance+pay);Store.sync();Stats.record(game,bet,pay);Rank.onRound(game,net,!(opts&&opts.noCount)&&bet>=CFG.ROUND_MIN_BET-1e-9);Store.save();return pay},
+settle(game,bet,gross,opts){Store.check();const pay=Econ.payout(bet,gross),d=Store.d,net=Econ.r2(pay-bet);d.balance=Econ.r2(d.balance+pay);Store.sync();Stats.record(game,bet,pay);Life.round(bet,gross,pay,opts);Rank.onRound(game,net,!(opts&&opts.noCount)&&bet>=CFG.ROUND_MIN_BET-1e-9);Store.save();return pay},
 /* Wallet credit that is NOT game profit: no stats, no rank money, no quest progress (cosmetic sales, Gem conversion, resets). */
-addCoins(n){Store.check();Store.d.balance=Econ.r2(Store.d.balance+n);Store.sync();Store.save()},
+addCoins(n){Store.check();Store.d.balance=Econ.r2(Store.d.balance+n);Store.sync();Life.coin(n);Store.save()},
 resetBalance(){Store.check();Store.d.balance=Econ.startBalance();Store.sync();Store.save()}};
 /* v2.25 cross-tab bet lock: the first tab to start a bet on a game owns it until it releases (resolved/cancelled). Stored in localStorage (the shared state);
    the owner refreshes t via beat(), so a lock whose owner crashed/closed goes stale after CFG.LOCK_TTL_MS and no longer blocks play. */
@@ -47,7 +47,7 @@ onRound(game,net,count=true){const d=Store.d,n=CFG.CONV[game]||1;if(count){d.pt[
 if(net>0){d.rc=Econ.r2(d.rc+net);Quests.add('profit',net)}},
 addMoney(n){Store.d.rc=Econ.r2(Store.d.rc+n)},      // Daily Spin Steakcoin rewards count toward rank money
 /* Single reviewable rank-up: validates again; wallet reset to the NEW rank's starting cash; Gems granted; rank counters reset; lifetime stats/cosmetics kept. */
-rankUp(){Store.load();const s=Rank.status();if(!s.ready)return null;const d=Store.d;d.rk++;const rw=CFG.RANKS[d.rk].rw;d.rc=0;d.rq=0;d.pt={};d.balance=rw.c;d.gems+=rw.g;Store.sync();Quests.add('rank',1);Store.save();return rw}};
+rankUp(){Store.load();const s=Rank.status();if(!s.ready)return null;const d=Store.d;d.rk++;Life.rank();const rw=CFG.RANKS[d.rk].rw;d.rc=0;d.rq=0;d.pt={};d.balance=rw.c;d.gems+=rw.g;Store.sync();Quests.add('rank',1);Store.save();return rw}};
 const Daily={
 readyIn:(now=Date.now())=>Math.max(0,Store.d.dl+CFG.DAILY.COOLDOWN_MS-now),
 ready:(now)=>Daily.readyIn(now)===0,
@@ -55,10 +55,10 @@ ready:(now)=>Daily.readyIn(now)===0,
 scale:(rk=Store.d?Store.d.rk:0)=>1+CFG.DAILY_RANK_SCALE*Math.max(0,rk|0),
 roll(rnd=Econ.rnd,rk=0){const R=CFG.DAILY.REWARDS,t=R.reduce((a,r)=>a+r.p,0);let x=rnd()*t,r=R[R.length-1];for(const c of R){if(x<c.p){r=c;break}x-=c.p}
 if(r.id==='x2')return{id:'x2',amount:0};const k=Daily.scale(rk),a=r.min+Math.floor(rnd()*(r.max-r.min+1));return{id:r.id,amount:r.id==='gem'?Math.max(1,Math.round(a*k)):Econ.r2(Math.round(a*k))}},
-claim(now=Date.now()){Store.load();Daily.credit(now);if(!Daily.ready(now))return null;const d=Store.d,rw=Daily.roll(Econ.rnd,d.rk);d.dl=now;d.dr=rw;d.dc=false;Store.save();return rw},
+claim(now=Date.now()){Store.load();Daily.credit(now);if(!Daily.ready(now))return null;const d=Store.d,rw=Daily.roll(Econ.rnd,d.rk);d.dl=now;d.dr=rw;d.dc=false;Life.touch(now);Store.save();return rw},
 /* Idempotent payout. Steakcoin reward -> balance AND rank money (once). Gem reward -> Gems only. 2X -> 15 min bonus (no stacking). */
 credit(now=Date.now()){Store.check();const d=Store.d;if(!d.dr||d.dc)return false;d.dc=true;
-if(d.dr.id==='x2')d.bx=now+CFG.DAILY.BONUS_MS;else if(d.dr.id==='gem')d.gems+=d.dr.amount;else{d.balance=Econ.r2(d.balance+d.dr.amount);Rank.addMoney(d.dr.amount)}
+if(d.dr.id==='x2')d.bx=now+CFG.DAILY.BONUS_MS;else if(d.dr.id==='gem')d.gems+=d.dr.amount;else{d.balance=Econ.r2(d.balance+d.dr.amount);Life.coin(d.dr.amount);Rank.addMoney(d.dr.amount)}
 Store.sync();Store.save();return true}};
 const Gems={
 /* 1 Gem = 50 Steakcoin (CFG.GEM.TO_COIN). Atomic; never counts as profit/rank money/quest progress. */
