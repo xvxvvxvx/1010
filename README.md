@@ -1,10 +1,7 @@
-# Gold/Steak/01O0
 Free-to-play simulator using fictional currency.
 
 ## Notes
 - Leaving a round mid-game forfeits the wager.
-- Have fun please I worked hard on the game :3
-
 ## Update 2.3
 Gem-Shop crates (TAGS / GRADIENTS), 5 new tags + 4 new gradients, Cases fake-common and rollback tip-over events (tease chance 80% -> 60%),
 Aviamasters rebalance (RTP about 97%) and visual upgrade, global rebrand (01O0coin, Wager).
