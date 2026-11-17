@@ -77,9 +77,6 @@ Gem-Shop cleanup (no rotation timer), crate-opening Skip button fixed in its own
 ## Tests
 `node tests/update30.test.js`, `node tests/update245.test.js`, `node tests/update23.test.js`, `node tests/update25.test.js`, `node tests/update26.test.js`, `node tests/update27.test.js`, `node tests/update275.test.js`, `node tests/update295.test.js`, `node tests/update28.test.js`, `node tests/economy.test.js`, `node tests/security.test.js`
 
-Much love,
-- Night n Claude <3
-
 ## Update 3.0 (Rank Expansion 3, Achievements, lifetime tracking, pity, Rank-Up Gradients, Aviamasters bands)
 Install: extract `goldupdate300.zip` over the repository root and overwrite. Every changed file is a COMPLETE replacement (no patches). Nothing else needs to be edited. This README.md is the old README plus this section.
 
